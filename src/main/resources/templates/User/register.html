@@ -14,30 +14,25 @@
     <link href="/FormAdmin/css/sb-admin-2.min.css" rel="stylesheet">
 
     <style>
-        @keyframes fadeOut {
-            0% {
-                opacity: 1;
-                visibility: visible;
-            }
-            100% {
-                opacity: 0;
-                visibility: hidden;
-                display: none;
-            }
+        .bg-register-image {
+            background: url(/images/register.avif);
+            background-position: center;
+            background-size: cover;
         }
 
-        .bg-register-image{
-            background:url(/images/register.avif);
-            background-position:center;
-            background-size:cover
-        }
         .bg-gradient-light {
             background: url('/images/nen.jpg');
             background-position: center;
-            background-size: cover; /* Giúp hình ảnh bao phủ toàn bộ khu vực */
-            background-repeat: no-repeat; /* Tránh lặp hình ảnh */
+            background-size: cover;
+            background-repeat: no-repeat;
         }
 
+        .password-error {
+            color: red;
+            font-size: 0.875rem;
+            margin-top: 5px;
+            display: none; /* Ẩn lỗi theo mặc định */
+        }
 
     </style>
 </head>
@@ -54,17 +49,15 @@
                             <h1 class="h4 text-gray-900 mb-4">Tạo tài khoản Gạo Quê!</h1>
                         </div>
 
-                        <!-- thông báo -->
-                        <div th:if="${error}" class="alert alert-danger text-center" th:text="${error}"
-                             style="animation: fadeOut 3s ease-out forwards;">
+                        <!-- Thông báo lỗi nếu có -->
+                        <div th:if="${error}" class="alert alert-danger text-center" th:text="${error}" style="animation: fadeOut 3s ease-out forwards;">
                         </div>
-                        <!-- Show error messages -->
-                        <div th:if="${message}" class="alert alert-success text-center" th:text="${message}"
-                             style="animation: fadeOut 3s ease-out forwards;">
-                        </div>
-                        <!-- thông báo -->
 
-                        <form th:action="@{/register}" method="post" th:object="${user}">
+                        <!-- Thông báo thành công nếu có -->
+                        <div th:if="${message}" class="alert alert-success text-center" th:text="${message}" style="animation: fadeOut 3s ease-out forwards;">
+                        </div>
+
+                        <form th:action="@{/register}" method="post" th:object="${user}" onsubmit="return validatePassword()">
                             <div class="form-group row">
                                 <div class="col-sm-6 mb-3 mb-sm-0">
                                     <input type="text" class="form-control form-control-user" id="firstName" name="firstName" th:field="*{firstName}" placeholder="First Name" required>
@@ -74,7 +67,7 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                                <input type="email" class="form-control form-control-user" id="email" name="username" th:field="*{email}" placeholder="Email Address" required>
+                                <input type="email" class="form-control form-control-user" id="email" name="email" th:field="*{email}" placeholder="Email Address" required>
                             </div>
                             <div class="form-group row">
                                 <div class="col-sm-6 mb-3 mb-sm-0">
@@ -84,6 +77,11 @@
                                     <input type="password" class="form-control form-control-user" id="confirmPassword" name="confirmPassword" placeholder="Confirm Password" required>
                                 </div>
                             </div>
+                            <!-- Thông báo lỗi nếu mật khẩu không hợp lệ -->
+                            <div id="password-error" class="password-error">
+                                Mật khẩu phải chứa ít nhất một chữ cái in hoa và một ký tự đặc biệt.
+                            </div>
+
                             <button type="submit" class="btn btn-primary btn-user btn-block">Đăng Kí</button>
                             <hr>
                             <a href="/User/Google" class="btn btn-google btn-user btn-block">
@@ -109,7 +107,24 @@
 <script src="/FormAdmin/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
 <script src="/FormAdmin/vendor/jquery-easing/jquery.easing.min.js"></script>
 <script src="/FormAdmin/js/sb-admin-2.min.js"></script>
-<!-- Bootstrap core JavaScript-->
 
+<script>
+    // Hàm kiểm tra mật khẩu
+    function validatePassword() {
+        var password = document.getElementById("password").value;
+        var errorElement = document.getElementById("password-error");
+        var regexUppercase = /[A-Z]/;  // Kiểm tra chữ in hoa
+        var regexSpecialChar = /[!@#$%^&*(),.?":{}|<>]/;  // Kiểm tra ký tự đặc biệt
+
+        // Kiểm tra mật khẩu có chữ in hoa và ký tự đặc biệt không
+        if (!regexUppercase.test(password) || !regexSpecialChar.test(password)) {
+            errorElement.style.display = "block";  // Hiển thị thông báo lỗi
+            return false;  // Ngừng gửi form
+        } else {
+            errorElement.style.display = "none";  // Ẩn thông báo lỗi nếu mật khẩu hợp lệ
+            return true;  // Tiếp tục gửi form
+        }
+    }
+</script>
 </body>
 </html>

@@ -1,87 +1,84 @@
 package com.GaoQue.service.cart;
 
-import com.GaoQue.exceptions.ResourceNotFoundException;
 import com.GaoQue.model.Cart;
 import com.GaoQue.model.CartItem;
 import com.GaoQue.model.Product;
 import com.GaoQue.repository.CartItemRepository;
 import com.GaoQue.repository.CartRepository;
-import com.GaoQue.service.product.IProductService;
+import com.GaoQue.repository.ProductRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class CartItemService  implements ICartItemService{
+public class CartItemService {
+
     private final CartItemRepository cartItemRepository;
     private final CartRepository cartRepository;
-    private final IProductService productService;
-    private final ICartService cartService;
+    private final ProductRepository productRepository;
 
-    @Override
-    public void addItemToCart(Long cartId, Long productId, int quantity) {
-        //1. Get the cart
-        //2. Get the product
-        //3. Check if the product already in the cart
-        //4. If Yes, then increase the quantity with the requested quantity
-        //5. If No, then initiate a new CartItem entry.
-        Cart cart = cartService.getCart(cartId);
-        Product product = productService.getProductById(productId);
-        CartItem cartItem = cart.getItems()
-                .stream()
-                .filter(item -> item.getProduct().getId().equals(productId))
-                .findFirst().orElse(new CartItem());
-        if (cartItem.getId() == null) {
-            cartItem.setCart(cart);
-            cartItem.setProduct(product);
-            cartItem.setQuantity(quantity);
-            cartItem.setUnitPrice(product.getPrice());
+    /**
+     * Thêm sản phẩm vào giỏ hàng
+     */
+    @Transactional
+    public CartItem addCartItem(Long cartId, Long productId, int quantity) {
+        Cart cart = cartRepository.findById(cartId)
+                .orElseThrow(() -> new EntityNotFoundException("Cart not found with id: " + cartId));
+
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + productId));
+
+        CartItem existingItem = cartItemRepository.findByCartIdAndProductId(cartId, productId);
+
+        if (existingItem != null) {
+            // Nếu sản phẩm đã tồn tại trong giỏ hàng, cập nhật số lượng
+            existingItem.setQuantity(existingItem.getQuantity() + quantity);
+            existingItem.updateTotalPrice();
+            return cartItemRepository.save(existingItem);
+        } else {
+            // Nếu sản phẩm chưa tồn tại, thêm mới
+            CartItem newItem = new CartItem();
+            newItem.setCart(cart);
+            newItem.setProduct(product);
+            newItem.setQuantity(quantity);
+            newItem.setUnitPrice(product.getPrice());
+            newItem.updateTotalPrice();
+            return cartItemRepository.save(newItem);
         }
-        else {
-            cartItem.setQuantity(cartItem.getQuantity() + quantity);
+    }
+
+    /**
+     * Xóa sản phẩm khỏi giỏ hàng
+     */
+    @Transactional
+    public void removeCartItem(Long cartId, Long productId) {
+        CartItem cartItem = cartItemRepository.findByCartIdAndProductId(cartId, productId);
+
+        if (cartItem == null) {
+            throw new EntityNotFoundException("CartItem not found in cart with id: " + cartId + " and product id: " + productId);
         }
-        cartItem.setTotalPrice();
-        cart.addItem(cartItem);
-        cartItemRepository.save(cartItem);
-        cartRepository.save(cart);
+
+        cartItemRepository.delete(cartItem);
     }
 
-    @Override
-    public void removeItemFromCart(Long cartId, Long productId) {
-        Cart cart = cartService.getCart(cartId);
-        CartItem itemToRemove = getCartItem(cartId, productId);
-        cart.removeItem(itemToRemove);
-        cartRepository.save(cart);
+    /**
+     * Lấy tất cả mục trong giỏ hàng
+     */
+    @Transactional(readOnly = true)
+    public List<CartItem> getCartItems(Long cartId) {
+        return cartItemRepository.findAllByCartId(cartId);
     }
 
-    @Override
-    public void updateItemQuantity(Long cartId, Long productId, int quantity) {
-        Cart cart = cartService.getCart(cartId);
-        cart.getItems()
-                .stream()
-                .filter(item -> item.getProduct().getId().equals(productId))
-                .findFirst()
-                .ifPresent(item -> {
-                    item.setQuantity(quantity);
-                    item.setUnitPrice(item.getProduct().getPrice());
-                    item.setTotalPrice();
-                });
-        BigDecimal totalAmount = cart.getItems()
-                .stream().map(CartItem ::getTotalPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-        cart.setTotalAmount(totalAmount);
-        cartRepository.save(cart);
-    }
-
-    @Override
-    public CartItem getCartItem(Long cartId, Long productId) {
-        Cart cart = cartService.getCart(cartId);
-        return  cart.getItems()
-                .stream()
-                .filter(item -> item.getProduct().getId().equals(productId))
-                .findFirst().orElseThrow(() -> new ResourceNotFoundException("Item not found"));
+    /**
+     * Xóa tất cả mục trong giỏ hàng
+     */
+    @Transactional
+    public void clearCartItems(Long cartId) {
+        cartItemRepository.deleteAllByCartId(cartId);
     }
 }

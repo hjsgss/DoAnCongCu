@@ -34,28 +34,58 @@ public class UserController {
 
     @PostMapping("/register")
     public String createUser(@ModelAttribute("user") @Valid CreateUserRequest request,
-                             BindingResult bindingResult,@RequestParam("confirmPassword") String confirmPassword,
+                             BindingResult bindingResult,
+                             @RequestParam("confirmPassword") String confirmPassword,
                              Model model) {
 
+        // Kiểm tra mật khẩu có khớp không
         if (!request.getPassword().equals(confirmPassword)) {
             model.addAttribute("error", "Mật khẩu không khớp!!");
             return "/User/register";
         }
+
+        // Kiểm tra mật khẩu có đủ các yêu cầu không
+        String password = request.getPassword();
+
+        // Kiểm tra mật khẩu có ít nhất một chữ cái in hoa
+        if (!password.matches(".*[A-Z].*")) {
+            model.addAttribute("error", "Mật khẩu phải chứa ít nhất một chữ cái in hoa.");
+            return "/User/register";
+        }
+
+        // Kiểm tra mật khẩu có ít nhất một chữ số
+        if (!password.matches(".*\\d.*")) {
+            model.addAttribute("error", "Mật khẩu phải chứa ít nhất một chữ số.");
+            return "/User/register";
+        }
+
+        // Kiểm tra mật khẩu có ít nhất một ký tự đặc biệt
+        if (!password.matches(".*[@$!%*?&].*")) {
+            model.addAttribute("error", "Mật khẩu phải chứa ít nhất một ký tự đặc biệt.");
+            return "/User/register";
+        }
+
+        // Kiểm tra lỗi validation khác (email, tên, v.v...)
         if (bindingResult.hasErrors()) {
             model.addAttribute("error", "Nhập dữ liệu không đúng. Bạn hãy nhập lại!!");
             return "/User/register";
         }
 
         try {
+            // Tạo người dùng mới
             User user = userService.createUser(request);
             UserDto userDto = userService.convertUserToDto(user);
-            model.addAttribute("message", "Tại tài khoản Gạo Quê thành công!.");
+
+            // Thêm thông báo thành công
+            model.addAttribute("message", "Tạo tài khoản Gạo Quê thành công.");
             model.addAttribute("user", userDto);
+
+            // Chuyển hướng tới trang login
             return "/User/login";
         } catch (AlreadyExistsException e) {
+            // Xử lý khi tài khoản đã tồn tại
             model.addAttribute("error", e.getMessage());
             return "/User/register";
         }
     }
-
 }
