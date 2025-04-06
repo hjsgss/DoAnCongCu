@@ -25,5 +25,5 @@ public class Comment {
 
     @ManyToOne
     @JoinColumn(name = "product_id")
-    private Product product; // Sản phẩm liên quan đến bình luận
+    private Product product; 
 }
