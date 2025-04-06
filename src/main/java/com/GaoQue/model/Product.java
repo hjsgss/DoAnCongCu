@@ -23,7 +23,6 @@ public class Product {
     private String formattedPrice;
     private int inventory;
     private String description;
-    private String comment;
 
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "category_id")
@@ -31,6 +30,9 @@ public class Product {
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Image> images;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments; // Danh sách bình luận liên quan đến sản phẩm
 
     public Product(String name, String brand, BigDecimal price, int inventory, String description, Category category) {
         this.name = name;

@@ -46,6 +46,9 @@ public class User {
     @ToString.Exclude
     private Set<Role> roles = new HashSet<>();
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments; // Danh sách bình luận của người dùng
+
     public boolean isAccountNonExpired() {
         return true;
     }
@@ -74,6 +77,4 @@ public class User {
     public int hashCode() {
         return getClass().hashCode();
     }
-
-
 }
