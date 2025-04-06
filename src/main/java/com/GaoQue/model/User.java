@@ -62,7 +62,7 @@ public class User {
     }
 
     public boolean isEnabled() {
-        return true; // Tùy vào logic của bạn (có thể là trạng thái kích hoạt)
+        return true; // Tùy vào logic của bạn (có thể là trạng thái kích hoạt) //hrhrhrhrhrhr
     }
 
     @Override
