@@ -21,7 +21,7 @@ public class Comment {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
-    private User user; // Người bình luận
+    private User user; 
 
     @ManyToOne
     @JoinColumn(name = "product_id")
