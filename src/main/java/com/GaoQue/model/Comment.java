@@ -17,7 +17,7 @@ public class Comment {
     private Long id;
 
     @Column(length = 500)
-    private String content; // Nội dung bình luận
+    private String content;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
