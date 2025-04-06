@@ -23,6 +23,7 @@ public class Product {
     private String formattedPrice;
     private int inventory;
     private String description;
+    private String comment;
 
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "category_id")
